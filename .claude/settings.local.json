@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm show *)",
+      "Bash(npx tsc *)",
+      "Bash(npx drizzle-kit *)",
+      "Bash(npm audit *)",
+      "Bash(node -e ' *)",
+      "Bash(node *)"
+    ]
+  }
+}

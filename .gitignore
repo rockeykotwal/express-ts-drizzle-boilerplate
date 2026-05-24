@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# Drizzle local artifacts
+.drizzle/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Docker override (keep docker-compose.yml, ignore local overrides)
+docker-compose.override.yml

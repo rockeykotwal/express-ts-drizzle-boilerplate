@@ -1,0 +1,75 @@
+{
+  "family": "express-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::{{ACCOUNT_ID}}:role/ecsTaskExecutionRole",
+  "taskRoleArn":      "arn:aws:iam::{{ACCOUNT_ID}}:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "{{ACCOUNT_ID}}.dkr.ecr.{{AWS_REGION}}.amazonaws.com/express-app:{{IMAGE_TAG}}",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "NODE_ENV",            "value": "production"      },
+        { "name": "APP_PORT",            "value": "3000"            },
+        { "name": "DB_HOST",             "value": "{{DB_HOST}}"     },
+        { "name": "DB_PORT",             "value": "5432"            },
+        { "name": "DB_NAME",             "value": "{{DB_NAME}}"     },
+        { "name": "DB_USER",             "value": "{{DB_USER}}"     },
+        { "name": "DB_POOL_MIN",         "value": "2"               },
+        { "name": "DB_POOL_MAX",         "value": "10"              },
+        { "name": "REDIS_URL",           "value": "{{REDIS_URL}}"   },
+        { "name": "OTEL_SERVICE_NAME",   "value": "express-app"     },
+        { "name": "OTEL_EXPORTER_OTLP_ENDPOINT", "value": "{{OTEL_ENDPOINT}}" }
+      ],
+      "secrets": [
+        {
+          "name": "DB_PASS",
+          "valueFrom": "arn:aws:secretsmanager:{{AWS_REGION}}:{{ACCOUNT_ID}}:secret:{{SECRET_NAME}}:DB_PASS::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group":         "/ecs/express-app",
+          "awslogs-region":        "{{AWS_REGION}}",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group":  "true"
+        }
+      },
+      "healthCheck": {
+        "command":     ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
+        "interval":    30,
+        "timeout":     5,
+        "retries":     3,
+        "startPeriod": 60
+      },
+      "ulimits": [
+        {
+          "name":      "nofile",
+          "softLimit": 65535,
+          "hardLimit": 65535
+        }
+      ],
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
+      "readonlyRootFilesystem": false,
+      "stopTimeout": 30
+    }
+  ],
+  "tags": [
+    { "key": "Environment", "value": "{{ENVIRONMENT}}" },
+    { "key": "Service",     "value": "express-app"    },
+    { "key": "ManagedBy",   "value": "ecs"            }
+  ]
+}
