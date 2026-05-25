@@ -7,7 +7,23 @@
       "Bash(npx drizzle-kit *)",
       "Bash(npm audit *)",
       "Bash(node -e ' *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npm run *)",
+      "Bash(psql --version)",
+      "Bash(redis-cli --version)",
+      "Bash(brew services *)",
+      "Bash(brew --version)",
+      "Bash(redis-cli ping *)",
+      "Read(//opt/homebrew/Cellar/redis/8.6.3/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/Cellar/postgresql@16/16.14/bin/**)",
+      "Bash(/opt/homebrew/bin/brew services *)",
+      "Bash(PGPASSWORD='R0ckey@24052026!' /opt/homebrew/bin/psql -h localhost -U rockeykotwal -l)",
+      "Bash(/opt/homebrew/bin/psql -U rockeykotwalmac -l)",
+      "Bash(/opt/homebrew/bin/psql *)",
+      "Bash(grep -v '^$')",
+      "Bash(/opt/homebrew/bin/redis-cli ping *)",
+      "Bash(curl -s http://localhost:3000/health)"
     ]
   }
 }

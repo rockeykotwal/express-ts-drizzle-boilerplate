@@ -1,3 +1,6 @@
+# if everything is ready and you are confident:
+npm run dev
+
 # Express TypeScript Drizzle Boilerplate
 
 A production-ready REST API template built for AWS ECS/Fargate. Batteries included: dependency injection, Redis caching, rate limiting, OpenTelemetry tracing, structured logging, Swagger docs, graceful shutdown, and a Docker multi-stage build — all wired together from the start so you ship features, not scaffolding.

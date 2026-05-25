@@ -3,7 +3,15 @@ const js = require('@eslint/js');
 const tseslint = require('typescript-eslint');
 
 module.exports = tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', 'coverage/**'] },
+  {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      'eslint.config.js',   // CJS config file — not subject to TS linting rules
+      'drizzle.config.ts',  // outside tsconfig rootDir (src/), type-aware linting cannot reach it
+    ],
+  },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -25,7 +33,7 @@ module.exports = tseslint.config(
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-floating-promises': 'error',
-      'no-console': 'warn',
+      'no-console': ['warn', { allow: ['error'] }],
     },
   },
 
