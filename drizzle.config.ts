@@ -5,7 +5,7 @@ dotenv.config();
 
 export default {
   dialect: 'postgresql',
-  schema: './src/api/models/*',
+  schema: './src/**/models/*.schema.ts',
   out: './src/database/migrations',
   dbCredentials: {
     host:     process.env.DB_HOST     ?? 'localhost',

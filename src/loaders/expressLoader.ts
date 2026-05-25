@@ -13,6 +13,7 @@ import { requestLogger } from '../api/middlewares/requestLogger';
 import { defaultRateLimiter } from '../api/middlewares/rateLimiter';
 import { notFound } from '../api/middlewares/notFound';
 import { errorHandler } from '../api/middlewares/errorHandler';
+import { registerRbac, PERMISSIONS, authorize } from '../modules/rbac';
 
 const swaggerSpec = swaggerJsdoc({
   definition: {
@@ -92,15 +93,19 @@ export function expressLoader(): Application {
     },
   );
 
-  // ── Protect all /api/users routes except POST /api/users ──────────────────
-  app.use('/api/users', (req: Request, res: Response, next: NextFunction) => {
-    if (req.method === 'POST') return next();
-    authenticate(req, res, next);
-  });
+  // ── Per-route auth + authorization for /api/users ─────────────────────────
+  app.get(   '/api/users',      authenticate, authorize(PERMISSIONS.USERS_READ));
+  app.get(   '/api/users/:id',  authenticate, authorize(PERMISSIONS.USERS_READ));
+  app.post(  '/api/users',      authenticate, authorize(PERMISSIONS.USERS_WRITE));
+  app.put(   '/api/users/:id',  authenticate, authorize(PERMISSIONS.USERS_WRITE));
+  app.delete('/api/users/:id',  authenticate, authorize(PERMISSIONS.USERS_DELETE));
 
   // ── User CRUD routes ───────────────────────────────────────────────────────
   const userController = container.resolve(UserController);
   app.use('/api/users', userController.router());
+
+  // ── RBAC module (roles, permissions, user-role assignment) ────────────────
+  registerRbac(app);
 
   // ── Global rate limiting (skips /health via `skip` option) ─────────────────
   app.use(defaultRateLimiter);
