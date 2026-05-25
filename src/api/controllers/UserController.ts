@@ -3,6 +3,7 @@ import { injectable } from 'tsyringe';
 import { Router, Request, Response, NextFunction } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject, ValidationError } from 'class-validator';
+import * as argon2 from 'argon2';
 import { UserService } from '../services/UserService';
 import { CreateUserDto } from '../validators/CreateUserDto';
 import { UpdateUserDto } from '../validators/UpdateUserDto';
@@ -226,7 +227,8 @@ export class UserController {
       throw toValidationError(errs as ValidationError[]);
     }
 
-    const user = await this.userService.create(dto);
+    const passwordHash = await argon2.hash(dto.password);
+    const user = await this.userService.create({ ...dto, passwordHash });
     res.status(201).json(user);
   }
 

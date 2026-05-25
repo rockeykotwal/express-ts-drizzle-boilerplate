@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import { AppError } from '../errors/AppError';
 
 dotenv.config();
 
@@ -6,6 +7,21 @@ function requireEnv(key: string): string {
   const value = process.env[key];
   if (value === undefined || value === '') {
     throw new Error(`Missing required environment variable: "${key}"`);
+  }
+  return value;
+}
+
+function requireSecret(key: string, minLength: number): string {
+  const value = process.env[key];
+  if (value === undefined || value === '') {
+    throw new AppError(`Missing required environment variable: "${key}"`, 500, false);
+  }
+  if (value.length < minLength) {
+    throw new AppError(
+      `Environment variable "${key}" must be at least ${minLength} characters`,
+      500,
+      false,
+    );
   }
   return value;
 }
@@ -45,6 +61,11 @@ export const config = {
   otel: {
     serviceName: optionalEnv('OTEL_SERVICE_NAME', 'express-app'),
     exporterEndpoint: optionalEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'),
+  },
+  jwt: {
+    secret: requireSecret('JWT_SECRET', 32),
+    accessExpiresIn: optionalEnv('JWT_ACCESS_EXPIRES_IN', '15m'),
+    refreshExpiresIn: optionalEnv('JWT_REFRESH_EXPIRES_IN', '7d'),
   },
 } as const;
 
