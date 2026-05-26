@@ -1,6 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { container } from '../container';
@@ -9,6 +10,7 @@ import { UserService } from '../api/services/UserService';
 import authRouter from '../api/controllers/AuthController';
 import { authenticate } from '../api/middlewares/authenticate';
 import { config } from '../config';
+import { corsOptions } from '../config/cors.config';
 import { requestLogger } from '../api/middlewares/requestLogger';
 import { defaultRateLimiter } from '../api/middlewares/rateLimiter';
 import { notFound } from '../api/middlewares/notFound';
@@ -50,13 +52,17 @@ const swaggerSpec = swaggerJsdoc({
 export function expressLoader(): Application {
   const app = express();
 
-  // ── Security headers & CORS ────────────────────────────────────────────────
-  app.use(helmet());
-  app.use(cors());
+  // ── CORS — must be first so preflight and credentialed requests are handled ─
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
 
-  // ── Body parsing ───────────────────────────────────────────────────────────
+  // ── Security headers ───────────────────────────────────────────────────────
+  app.use(helmet());
+
+  // ── Body & cookie parsing ──────────────────────────────────────────────────
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(cookieParser());
 
   // ── Request logging ────────────────────────────────────────────────────────
   app.use(requestLogger);

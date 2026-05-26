@@ -199,8 +199,14 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
     } catch (errs) {
       throw toValidationError(errs as ValidationError[]);
     }
-    const result = await authService.login(dto);
-    res.status(200).json(result);
+    const { accessToken, refreshToken, user } = await authService.login(dto);
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env['NODE_ENV'] === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.status(200).json({ success: true, data: { accessToken, user } });
   } catch (err) {
     next(err);
   }
@@ -282,7 +288,26 @@ router.post('/logout', authenticate, async (req: Request, res: Response, next: N
   try {
     const { userId } = res.locals.user as { userId: string };
     await authService.logout(userId);
-    res.status(200).json({ message: 'Logged out successfully' });
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env['NODE_ENV'] === 'production',
+      sameSite: 'lax',
+    });
+    res.status(200).json({ success: true, message: 'Logged out' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/refresh', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.cookies['refreshToken'] as string | undefined;
+    if (!token) {
+      res.status(401).json({ success: false, message: 'No refresh token' });
+      return;
+    }
+    const { accessToken } = await authService.refresh(token);
+    res.status(200).json({ success: true, data: { accessToken } });
   } catch (err) {
     next(err);
   }
