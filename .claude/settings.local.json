@@ -41,7 +41,16 @@
       "Bash(npm test *)",
       "Bash(npx vitest *)",
       "Bash(python3 *)",
-      "Bash(rm /Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.github/workflows/deploy.yml)"
+      "Bash(rm /Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.github/workflows/deploy.yml)",
+      "Bash(xargs cat -n)",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"SELECT 1\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"\\\\dt\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"\\\\d users\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"SELECT * FROM __drizzle_migrations ORDER BY created_at\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"\\\\dt drizzle*\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text NOT NULL DEFAULT ''\")",
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"ALTER TABLE users ALTER COLUMN password_hash DROP DEFAULT\")"
     ],
     "additionalDirectories": [
       "/Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.claude",

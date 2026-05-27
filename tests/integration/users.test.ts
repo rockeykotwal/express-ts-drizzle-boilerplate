@@ -34,7 +34,7 @@ afterEach(async () => {
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-async function makeToken(userId: string, email: string): Promise<string> {
+async function _makeToken(userId: string, email: string): Promise<string> {
   const secret = new TextEncoder().encode(config.jwt.secret);
   return new SignJWT({ sub: userId, email, type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })

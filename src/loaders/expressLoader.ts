@@ -92,7 +92,8 @@ export function expressLoader(): Application {
       try {
         const { userId } = res.locals['user'] as { userId: string };
         const user = await userService.findById(userId);
-        res.json({ user });
+        const { passwordHash: _pw, ...safeUser } = user;
+        res.json({ user: safeUser });
       } catch (err) {
         next(err);
       }

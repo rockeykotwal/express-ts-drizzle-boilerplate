@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { Request, Response, NextFunction } from 'express';
 import { errorHandler } from '../../../src/api/middlewares/errorHandler';
 import { AppError } from '../../../src/errors/AppError';

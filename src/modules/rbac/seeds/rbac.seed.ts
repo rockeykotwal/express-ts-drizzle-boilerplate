@@ -2,6 +2,7 @@
 // Does NOT use tsyringe. Uses Drizzle db client directly.
 
 import { db, pool } from '../../../database/client';
+import { logger } from '../../../observability/logger';
 import { permissionsTable } from '../models/permission.schema';
 import { rolesTable } from '../models/role.schema';
 import { rolePermissionsTable } from '../models/role-permission.schema';
@@ -28,19 +29,19 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 // ── Seed logic ────────────────────────────────────────────────────────────────
 
 async function seed(): Promise<void> {
-  console.log('Seeding permissions...');
+  logger.info('Seeding permissions...');
   await db
     .insert(permissionsTable)
     .values(PERMISSION_DATA.map((p) => ({ ...p })))
     .onConflictDoNothing();
-  console.log(`  ${PERMISSION_DATA.length} permissions upserted.`);
+  logger.info(`  ${PERMISSION_DATA.length} permissions upserted.`);
 
-  console.log('Seeding roles...');
+  logger.info('Seeding roles...');
   const roleData = Object.keys(ROLE_PERMISSIONS).map((name) => ({ name }));
   await db.insert(rolesTable).values(roleData).onConflictDoNothing();
-  console.log(`  ${roleData.length} roles upserted.`);
+  logger.info(`  ${roleData.length} roles upserted.`);
 
-  console.log('Assigning permissions to roles...');
+  logger.info('Assigning permissions to roles...');
 
   const allPermissions = await db.select().from(permissionsTable);
   const permMap = new Map(allPermissions.map((p) => [p.key, p.id]));
@@ -51,14 +52,14 @@ async function seed(): Promise<void> {
   for (const [roleName, permKeys] of Object.entries(ROLE_PERMISSIONS)) {
     const roleId = roleMap.get(roleName);
     if (!roleId) {
-      console.warn(`  Role "${roleName}" not found — skipping.`);
+      logger.warn(`  Role "${roleName}" not found — skipping.`);
       continue;
     }
 
     for (const permKey of permKeys) {
       const permissionId = permMap.get(permKey);
       if (!permissionId) {
-        console.warn(`  Permission "${permKey}" not found — skipping.`);
+        logger.warn(`  Permission "${permKey}" not found — skipping.`);
         continue;
       }
 
@@ -68,10 +69,10 @@ async function seed(): Promise<void> {
         .onConflictDoNothing();
     }
 
-    console.log(`  Assigned permissions to role "${roleName}".`);
+    logger.info(`  Assigned permissions to role "${roleName}".`);
   }
 
-  console.log('RBAC seed complete.');
+  logger.info('RBAC seed complete.');
 }
 
 seed()
