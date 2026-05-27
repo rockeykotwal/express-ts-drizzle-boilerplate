@@ -40,10 +40,12 @@
       "Bash(xargs cat)",
       "Bash(npm test *)",
       "Bash(npx vitest *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(rm /Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.github/workflows/deploy.yml)"
     ],
     "additionalDirectories": [
-      "/Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.claude"
+      "/Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.claude",
+      "/Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.github/workflows"
     ]
   }
 }
