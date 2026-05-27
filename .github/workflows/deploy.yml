@@ -1,0 +1,94 @@
+# ── Required GitHub Secrets ────────────────────────────────────────────────────
+# Set these in: Settings → Secrets and variables → Actions → New repository secret
+#
+# AWS_ACCESS_KEY_ID       IAM user with ECR push + ECS update permissions
+# AWS_SECRET_ACCESS_KEY   IAM user secret key
+# AWS_REGION              AWS region, e.g. us-east-1
+# ECR_REPOSITORY          ECR repository name, e.g. express-app
+# ECS_CLUSTER             ECS cluster name
+# ECS_SERVICE             ECS service name
+# CONTAINER_NAME          Container name — must match task-definition.json exactly
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Deploy to AWS ECS
+
+on:
+  push:
+    branches: [main]
+
+# Never cancel an in-progress deploy — it can leave ECS in a broken state
+# (e.g. old tasks drained before the new task has passed health checks).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  # ── Job: Build, Push & Deploy ─────────────────────────────────────────────────
+  deploy:
+    name: Build, Push & Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: meta
+        run: |
+          SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          REGISTRY=${{ steps.ecr-login.outputs.registry }}
+          REPO=${{ secrets.ECR_REPOSITORY }}
+          echo "tag=${REGISTRY}/${REPO}:${SHA}" >> $GITHUB_OUTPUT
+          echo "latest=${REGISTRY}/${REPO}:latest" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        # cache-from reuses the previous :latest image layers for faster builds
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.latest }}
+          cache-from: type=registry,ref=${{ steps.meta.outputs.latest }}
+          cache-to: type=inline
+
+      - name: Download live task definition from ECS
+        # Use the LIVE definition from ECS — not the committed task-definition.json —
+        # so we don't overwrite environment vars or secrets configured in the console.
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition express-app \
+            --query taskDefinition \
+            > task-definition-live.json
+
+      - name: Render updated task definition with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition-live.json
+          container-name:  ${{ secrets.CONTAINER_NAME }}
+          image:           ${{ steps.meta.outputs.tag }}
+
+      - name: Deploy to ECS and wait for stability
+        # Blocks until ECS health checks pass — fails loudly if the new
+        # container crashes or doesn't start within the ECS timeout.
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition:            ${{ steps.render-task-def.outputs.task-definition }}
+          service:                    ${{ secrets.ECS_SERVICE }}
+          cluster:                    ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true

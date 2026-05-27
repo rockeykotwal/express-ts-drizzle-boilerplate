@@ -37,7 +37,10 @@
       "Bash(mkdir -p /Users/rockeykotwalmac/Desktop/Boilerplate/reactjs-ts-vite-boilerplate/.claude/commands)",
       "Bash(cp /Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.claude/commands/git-sync.md /Users/rockeykotwalmac/Desktop/Boilerplate/reactjs-ts-vite-boilerplate/.claude/commands/git-sync.md)",
       "Bash(xargs ls)",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "Bash(npm test *)",
+      "Bash(npx vitest *)",
+      "Bash(python3 *)"
     ],
     "additionalDirectories": [
       "/Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.claude"

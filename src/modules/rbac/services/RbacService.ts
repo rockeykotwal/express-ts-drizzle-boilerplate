@@ -13,8 +13,8 @@ const CACHE_TTL = 900; // 15 minutes
 @injectable()
 export class RbacService {
   constructor(
-    private readonly roleRepository: RoleRepository,
-    private readonly permissionRepository: PermissionRepository,
+    @inject(RoleRepository) private readonly roleRepository: RoleRepository,
+    @inject(PermissionRepository) private readonly permissionRepository: PermissionRepository,
     @inject(TOKENS.RedisClient) private readonly redis: Redis,
   ) {}
 

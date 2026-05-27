@@ -23,6 +23,7 @@ A production-ready REST API template built for AWS ECS/Fargate. Batteries includ
 - [Rate Limiting](#rate-limiting)
 - [OpenTelemetry](#opentelemetry)
 - [AWS ECS/Fargate Deployment](#aws-ecsfargate-deployment)
+- [CI/CD Setup](#cicd-setup)
 - [Contributing](#contributing)
 
 ---
@@ -721,6 +722,50 @@ aws ecs run-task \
   run: |
     aws ecs update-service --force-new-deployment ...
 ```
+
+---
+
+## CI/CD Setup
+
+### GitHub Actions Workflows
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | Every PR + push to `main` | Lint → Test (with coverage) → TypeScript build |
+| `deploy.yml` | Push to `main` only | Docker build → ECR push → ECS deploy |
+
+### Required GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions** and add:
+
+| Secret | Description |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | IAM user access key (needs ECR push + ECS update permissions) |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret key |
+| `AWS_REGION` | AWS region, e.g. `us-east-1` |
+| `ECR_REPOSITORY` | ECR repository name |
+| `ECS_CLUSTER` | ECS cluster name |
+| `ECS_SERVICE` | ECS service name |
+| `CONTAINER_NAME` | Container name — must match `task-definition.json` exactly |
+
+### Local Email Testing (Mailpit)
+
+Start Mailpit alongside Postgres and Redis:
+
+```bash
+docker-compose up postgres redis mailpit -d
+```
+
+Then set these in your `.env`:
+
+```dotenv
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_SECURE=false
+EMAIL_PROVIDER=smtp
+```
+
+Open **http://localhost:8025** to inspect all outbound emails in a browser UI. No emails leave your machine — Mailpit intercepts them all.
 
 ---
 

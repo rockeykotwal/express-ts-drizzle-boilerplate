@@ -55,6 +55,13 @@ services:
       timeout: 5s
       retries: 5
 
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"   # SMTP — configure SMTP_HOST=localhost SMTP_PORT=1025
+      - "8025:8025"   # Web UI — open http://localhost:8025 to inspect emails
+    restart: unless-stopped
+
 volumes:
   pgdata:
   redisdata:

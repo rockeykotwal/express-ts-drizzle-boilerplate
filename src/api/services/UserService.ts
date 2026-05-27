@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { UserRepository } from '../repositories/UserRepository';
 import { AppError } from '../../errors/AppError';
 import type { User, NewUser } from '../models/user.schema';
@@ -7,7 +7,7 @@ import type { UpdateUserDto } from '../validators/UpdateUserDto';
 
 @injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(@inject(UserRepository) private readonly userRepository: UserRepository) {}
 
   async findAll(): Promise<User[]> {
     return this.userRepository.findAll();

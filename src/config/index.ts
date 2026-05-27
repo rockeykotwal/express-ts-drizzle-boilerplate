@@ -42,9 +42,11 @@ function envInt(key: string, fallback: number): number {
 
 export const config = {
   app: {
-    port: envInt('APP_PORT', 3000),
-    env: optionalEnv('NODE_ENV', 'development'),
+    port:         envInt('APP_PORT', 3000),
+    env:          optionalEnv('NODE_ENV', 'development'),
     isProduction: optionalEnv('NODE_ENV', 'development') === 'production',
+    name:         optionalEnv('APP_NAME', 'App'),
+    frontendUrl:  optionalEnv('FRONTEND_URL', 'http://localhost:5173'),
   },
   db: {
     host: requireEnv('DB_HOST'),
@@ -63,9 +65,25 @@ export const config = {
     exporterEndpoint: optionalEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'),
   },
   jwt: {
-    secret: requireSecret('JWT_SECRET', 32),
-    accessExpiresIn: optionalEnv('JWT_ACCESS_EXPIRES_IN', '15m'),
+    secret:           requireSecret('JWT_SECRET', 32),
+    accessExpiresIn:  optionalEnv('JWT_ACCESS_EXPIRES_IN', '15m'),
     refreshExpiresIn: optionalEnv('JWT_REFRESH_EXPIRES_IN', '7d'),
+  },
+  auth: {
+    requireEmailVerification: optionalEnv('REQUIRE_EMAIL_VERIFICATION', 'true') !== 'false',
+  },
+  email: {
+    provider:    optionalEnv('EMAIL_PROVIDER', 'smtp') as 'smtp' | 'resend',
+    from:        optionalEnv('EMAIL_FROM', 'noreply@example.com'),
+    fromName:    optionalEnv('EMAIL_FROM_NAME', 'App'),
+    smtp: {
+      host:   optionalEnv('SMTP_HOST', 'localhost'),
+      port:   envInt('SMTP_PORT', 587),
+      secure: optionalEnv('SMTP_SECURE', 'false') === 'true',
+      user:   optionalEnv('SMTP_USER', ''),
+      pass:   optionalEnv('SMTP_PASS', ''),
+    },
+    resendApiKey: optionalEnv('RESEND_API_KEY', ''),
   },
 } as const;
 

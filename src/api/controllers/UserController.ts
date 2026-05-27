@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { Router, Request, Response, NextFunction } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject, ValidationError } from 'class-validator';
@@ -122,7 +122,7 @@ function toValidationError(errors: ValidationError[]): AppError {
 // ── Controller ────────────────────────────────────────────────────────────────
 @injectable()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(@inject(UserService) private readonly userService: UserService) {}
 
   router(): Router {
     const r = Router();

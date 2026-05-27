@@ -17,7 +17,7 @@ export class AuthService {
   private readonly jwtSecret: Uint8Array;
 
   constructor(
-    private readonly userRepository: UserRepository,
+    @inject(UserRepository) private readonly userRepository: UserRepository,
     @inject('RedisClient') private readonly redis: Redis,
   ) {
     this.jwtSecret = new TextEncoder().encode(config.jwt.secret);
