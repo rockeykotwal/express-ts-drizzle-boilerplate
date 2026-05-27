@@ -22,13 +22,19 @@ export default defineWorkspace([
   // Hit the real Express app with a real PostgreSQL + Redis.
   // Requires: docker-compose up postgres redis -d && npm run db:migrate
   // No setupFiles — real DB and Redis connections must be live.
+  //
+  // fileParallelism: false — integration test files MUST run sequentially.
+  // Parallel execution causes race conditions: one file's afterEach
+  // (TRUNCATE users CASCADE) can delete users that another file's in-flight
+  // request is still using, producing spurious 404 / 401 failures in CI.
   {
     resolve: { alias },
     test: {
-      name:        'integration',
-      globals:     true,
-      environment: 'node',
-      include:     ['tests/integration/**/*.test.ts'],
+      name:            'integration',
+      globals:         true,
+      environment:     'node',
+      include:         ['tests/integration/**/*.test.ts'],
+      fileParallelism: false,
     },
   },
 ]);
