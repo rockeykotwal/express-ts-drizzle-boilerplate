@@ -13,7 +13,7 @@
  */
 
 import 'reflect-metadata';
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import type { Application } from 'express';
 import { sql } from 'drizzle-orm';
@@ -32,8 +32,9 @@ afterAll(async () => {
   await new Promise((r) => setTimeout(r, 200));
 });
 
-afterEach(async () => {
-  // Truncate users table so each test starts clean
+beforeEach(async () => {
+  // Truncate users table BEFORE each test so every test starts with a clean
+  // slate, regardless of what the previous test (or file) left behind.
   try {
     await db.execute(sql`TRUNCATE TABLE users CASCADE`);
   } catch {
