@@ -1,4 +1,4 @@
-You are performing a full git sync: stage → commit → pull if safe → push.
+You are performing a full git sync: stage → commit → push → PR.
 The user's commit message (if provided) is: $ARGUMENTS
 
 Follow every step below in order. Stop and report clearly if any step fails.
@@ -18,7 +18,29 @@ Run: `git status --short`
 
 Run: `git branch --show-current`
 
-Store this as the active branch. Use it in every subsequent git command instead of hardcoding "main".
+Store this as the active branch.
+
+---
+
+## STEP 2B — Guard against committing directly to main
+
+If the active branch from Step 2 is `main`:
+
+You must create a new feature branch. Never commit directly to main.
+
+Derive a branch name using this logic:
+- If `$ARGUMENTS` is non-empty: parse it as a conventional commit message.
+  - Extract the type prefix (e.g. `feat`, `fix`, `chore`, `ci`, `style`, `test`, `docs`, `refactor`). If none found, use `dev`.
+  - Take the description after the colon, lowercase it, replace spaces and special characters with hyphens, truncate to 40 chars.
+  - Result format: `<type>/<slugified-description>` (e.g. `feat/add-user-auth`, `fix/login-redirect`)
+- If `$ARGUMENTS` is empty: run `git diff --stat HEAD` and `git ls-files --others --exclude-standard` to understand the changes, then generate a short descriptive branch name in the same `<type>/<description>` format based on what changed.
+
+Run: `git checkout -b <derived-branch-name>`
+
+- Update the active branch variable to this new branch name.
+- Tell the user: "You were on main — created and switched to branch `<name>`."
+
+If the active branch is NOT `main`: skip this step entirely and continue with the existing branch.
 
 ---
 
@@ -62,14 +84,16 @@ This downloads the latest remote state without touching the local branch. It is 
 
 ---
 
-## STEP 7 — Check if remote is ahead
+## STEP 7 — Check if remote branch exists and is ahead
 
-Run: `git log HEAD..origin/<branch> --oneline`
+Run: `git ls-remote --heads origin <branch>`
 
-Where `<branch>` is the branch name from Step 2.
+Where `<branch>` is the active branch name.
 
-- If output is EMPTY: remote has no new commits. Skip to Step 10 (push directly).
-- If output is NON-EMPTY: remote has commits you don't have locally. Continue to Step 8.
+- If output is EMPTY: this is a brand-new branch with no remote counterpart. Skip Steps 8 and 9 — go directly to Step 10.
+- If output is NON-EMPTY: remote branch exists. Run `git log HEAD..origin/<branch> --oneline`:
+  - If EMPTY: remote has no new commits. Skip to Step 10.
+  - If NON-EMPTY: remote has commits you don't have locally. Continue to Step 8.
 
 ---
 
@@ -116,9 +140,9 @@ Run: `git push origin <branch>`
 
 ---
 
-## STEP 11 — Open Pull Request (non-main branches only)
+## STEP 11 — Open Pull Request
 
-Only run this step if the branch from Step 2 is NOT `main`.
+**Always run this step** — every sync goes through a PR, never directly to main.
 
 Check if a PR already exists for this branch:
 
@@ -143,17 +167,20 @@ EOF
 ```
 
 - Report the new PR URL to the user.
-- If `gh` is not installed or not authenticated: warn the user and skip silently.
+- If `gh` is not installed or not authenticated: warn the user and provide the GitHub URL to open the PR manually:
+  `https://github.com/<owner>/<repo>/compare/<branch>?expand=1`
+  Get the owner/repo from `git remote get-url origin`.
 
 ---
 
 ## FINAL REPORT
 
 After all steps, give the user a one-paragraph summary:
+- Whether a new branch was auto-created (name + reason)
 - What was committed (message + hash)
 - Whether a pull happened
 - Whether the push succeeded
-- Whether a PR was created or already existed (include the URL), or was skipped because branch is main
+- Whether a PR was created or already existed (include the URL)
 - If anything was skipped or failed, say why clearly
 
 Never silently skip a step. Always tell the user what you did and what happened.
