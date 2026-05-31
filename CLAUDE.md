@@ -18,6 +18,14 @@ Production-ready REST API targeting AWS ECS/Fargate. Node ≥ 22 required.
 | API Docs | Swagger via JSDoc `@openapi` annotations |
 | Testing | Vitest |
 
+## Architecture: 3-Layer Pattern
+
+Every feature follows: **Controller → Service → Repository**
+
+- **Controller** (`*Controller.ts`) — Express Router, DTO validation via `plainToInstance` + `validateOrReject`, calls service, passes errors to `next(err)`.
+- **Service** (`*Service.ts`) — Business logic only. Throws `AppError` for domain errors.
+- **Repository** (`*Repository.ts`) — Drizzle queries only. Handles Redis cache (read-through, write-invalidate pattern).
+
 ## Project Structure
 
 ```
@@ -39,14 +47,6 @@ src/
 ├── observability/      # logger, metrics, tracing
 └── container.ts        # tsyringe DI container + TOKENS
 ```
-
-## Architecture: 3-Layer Pattern
-
-Every feature follows: **Controller → Service → Repository**
-
-- **Controller** (`*Controller.ts`) — Express Router, DTO validation via `plainToInstance` + `validateOrReject`, calls service, passes errors to `next(err)`. Contains `@openapi` JSDoc for Swagger.
-- **Service** (`*Service.ts`) — Business logic only. `@injectable()` class injected via tsyringe. Throws `AppError` for domain errors.
-- **Repository** (`*Repository.ts`) — Drizzle queries only. No raw SQL ever. `@injectable()` class, injects `TOKENS.DrizzleDb`. Handles Redis cache (read-through, write-invalidate pattern).
 
 ## Dependency Injection
 
@@ -144,6 +144,26 @@ Self-contained feature module at `src/modules/rbac/` with its own controllers, s
 11. 404 handler
 12. Global error handler (always last)
 
+## Adding a New Module
+
+Follow this exact file structure (same as RBAC module):
+
+```
+src/modules/<name>/
+├── controllers/<Name>Controller.ts   # Express Router + OpenAPI JSDoc
+├── services/<Name>Service.ts         # @injectable() business logic
+├── repositories/<Name>Repository.ts  # @injectable() Drizzle queries
+├── models/<name>.schema.ts           # pgTable schema + type exports
+├── validators/<Action><Name>Dto.ts   # class-validator DTOs
+└── index.ts                          # register routes + re-export
+```
+
+Register the module in `src/loaders/expressLoader.ts` via `registerXxx(app)`.
+
+## Swagger Docs
+
+OpenAPI annotations live as JSDoc comments directly in controller files. Swagger UI is served at `/docs`. When adding new endpoints, add `@openapi` JSDoc blocks following the existing pattern in `AuthController.ts`.
+
 ## Observability
 
 - Logger: `import { logger } from './observability/logger'` — Winston, structured JSON in prod, colored in dev
@@ -173,28 +193,74 @@ npm run db:studio        # Open Drizzle Studio
 npm run db:seed:rbac     # Seed default roles and permissions
 ```
 
-## Adding a New Module
-
-Follow this exact file structure (same as RBAC module):
-
-```
-src/modules/<name>/
-├── controllers/<Name>Controller.ts   # Express Router + OpenAPI JSDoc
-├── services/<Name>Service.ts         # @injectable() business logic
-├── repositories/<Name>Repository.ts  # @injectable() Drizzle queries
-├── models/<name>.schema.ts           # pgTable schema + type exports
-├── validators/<Action><Name>Dto.ts   # class-validator DTOs
-└── index.ts                          # register routes + re-export
-```
-
-Register the module in `src/loaders/expressLoader.ts` via `registerXxx(app)`.
-
-## Swagger Docs
-
-OpenAPI annotations live as JSDoc comments directly in controller files. Swagger UI is served at `/docs`. When adding new endpoints, add `@openapi` JSDoc blocks following the existing pattern in `AuthController.ts`.
-
 ## Deployment
 
 - Docker + docker-compose for local dev
 - `task-definition.json` for AWS ECS/Fargate deployment
 - Graceful shutdown handles SIGTERM/SIGINT: closes HTTP server → drains DB pool → closes Redis → shuts down OTel tracing
+
+---
+
+## Claude Behavioral Guidelines
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+### 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
