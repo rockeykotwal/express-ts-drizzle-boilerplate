@@ -50,7 +50,11 @@
       "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"\\\\dt drizzle*\")",
       "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at\")",
       "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash text NOT NULL DEFAULT ''\")",
-      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"ALTER TABLE users ALTER COLUMN password_hash DROP DEFAULT\")"
+      "Bash(psql postgresql://rockeykotwalmac:postgres@localhost:5432/express-ts-drizzle-boilerplate -c \"ALTER TABLE users ALTER COLUMN password_hash DROP DEFAULT\")",
+      "Bash(git remote *)",
+      "Bash(git stash *)",
+      "Bash(MONGODB_URI=mongodb://localhost:27017/myapp npm run test)",
+      "Bash(MONGODB_URI=mongodb://localhost:27017/myapp npx vitest run tests/integration/users.test.ts)"
     ],
     "additionalDirectories": [
       "/Users/rockeykotwalmac/Desktop/Boilerplate/express-ts-drizzle-boilerplate/.claude",

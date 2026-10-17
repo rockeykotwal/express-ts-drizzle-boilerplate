@@ -60,6 +60,11 @@ export const config = {
   redis: {
     url: requireEnv('REDIS_URL'),
   },
+  mongo: {
+    uri:     requireEnv('MONGODB_URI'),
+    poolMin: envInt('MONGODB_POOL_MIN', 2),
+    poolMax: envInt('MONGODB_POOL_MAX', 10),
+  },
   otel: {
     serviceName: optionalEnv('OTEL_SERVICE_NAME', 'express-app'),
     exporterEndpoint: optionalEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'),

@@ -64,6 +64,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      mongodb:
+        image: mongo:8
+        ports:
+          - '27017:27017'
+        options: >-
+          --health-cmd "mongosh --eval \"db.adminCommand('ping')\""
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
       mailpit:
         image: axllent/mailpit:latest
         ports:
@@ -79,6 +89,7 @@ jobs:
       DB_POOL_MIN:                1
       DB_POOL_MAX:                5
       REDIS_URL:                  redis://localhost:6379
+      MONGODB_URI:                mongodb://localhost:27017/myapp
       JWT_SECRET:                 test-secret-key-minimum-32-characters-long
       EMAIL_PROVIDER:             smtp
       EMAIL_FROM:                 test@example.com
