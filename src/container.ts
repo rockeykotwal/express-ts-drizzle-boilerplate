@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { db } from './database/client';
 import { redisClient } from './cache/redis';
+import { mongoDb } from './mongodb/client';
 import { config } from './config';
 import { SmtpProvider }  from './modules/email/providers/SmtpProvider';
 import { ResendProvider } from './modules/email/providers/ResendProvider';
@@ -14,6 +15,7 @@ export { TOKENS } from './tokens';
 // ── Infrastructure instances ──────────────────────────────────────────────────
 container.registerInstance(TOKENS.DrizzleDb,   db);
 container.registerInstance(TOKENS.RedisClient, redisClient);
+container.registerInstance(TOKENS.MongoDb, mongoDb);
 
 // ── Email provider — chosen at startup from EMAIL_PROVIDER env var ─────────
 if (config.email.provider === 'resend') {

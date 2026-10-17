@@ -6,6 +6,7 @@ import { logger } from './observability/logger';
 import { shutdownTracing } from './observability/tracing';
 import { pool } from './database/client';
 import { redisClient } from './cache/redis';
+import { mongoClient } from './mongodb/client';
 import type { Server } from 'http';
 
 async function main(): Promise<void> {
@@ -32,6 +33,10 @@ async function main(): Promise<void> {
         })
         .then(() => {
           logger.info('Redis connection closed');
+          return mongoClient.close();
+        })
+        .then(() => {
+          logger.info('MongoDB connection closed');
           return shutdownTracing();
         })
         .then(() => {
