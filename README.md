@@ -42,6 +42,7 @@ A production-ready REST API template built for AWS ECS/Fargate. Batteries includ
 | Framework | Express 4 | Minimal surface area, mature ecosystem, easy to extend |
 | ORM | Drizzle ORM | SQL-first: you write real SQL shapes, no magic, migrations are plain files, zero runtime overhead |
 | Database | PostgreSQL 16 | ACID transactions, UUID primary keys, strong typing alignment with Drizzle |
+| Document Store | MongoDB 8 | Flexible schema storage for unstructured/semi-structured data alongside the relational model |
 | DI Container | tsyringe | Lightweight, decorator-based, works with reflect-metadata — no framework lock-in |
 | Cache | Redis 7 + ioredis | Read-through cache on hot resources; ioredis chosen over node-redis for cluster support and reconnect logic |
 | Rate Limiting | express-rate-limit + rate-limit-redis | Distributed rate limiting that survives horizontal scaling on ECS |
@@ -116,6 +117,12 @@ Lambda cold starts compound under traffic spikes. Fargate runs always-on contain
     │  (OTLP → X-Ray / Tempo /   │
     │   Datadog)                  │
     └─────────────────────────────┘
+           │
+    ┌──────▼──────┐
+    │   MongoDB   │
+    │  (mongo     │
+    │   driver)   │
+    └─────────────┘
 ```
 
 **Request lifecycle:**
@@ -139,6 +146,7 @@ Lambda cold starts compound under traffic spikes. Fargate runs always-on contain
 | Docker Compose | v2 (plugin) | Bundled with Docker Desktop |
 | PostgreSQL | 16 | Only needed for native local dev (skip if using Compose) |
 | Redis | 7 | Only needed for native local dev (skip if using Compose) |
+| MongoDB | 8 | Only needed for native local dev (skip if using Compose) |
 | AWS CLI | v2 | Required for ECR and ECS deployment |
 
 ---
@@ -156,7 +164,7 @@ cd express-ts-drizzle-boilerplate
 
 # 2. Create your env file
 cp .env.example .env
-# Edit .env — the Compose file overrides DB_HOST and REDIS_URL automatically
+# Edit .env — the Compose file overrides DB_HOST, REDIS_URL, and MONGODB_URI automatically
 
 # 3. Start everything
 docker compose up --build
@@ -185,7 +193,7 @@ npm install
 
 # 2. Create env file
 cp .env.example .env
-# Fill in DB_HOST, DB_NAME, DB_USER, DB_PASS, REDIS_URL
+# Fill in DB_HOST, DB_NAME, DB_USER, DB_PASS, REDIS_URL, MONGODB_URI
 
 # 3. Push the schema to your database (development shortcut — no migration files)
 npm run db:push
@@ -214,6 +222,9 @@ DB_POOL_MAX=10
 # Redis
 REDIS_URL=redis://localhost:6379
 
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/myapp
+
 # OpenTelemetry (optional in development)
 OTEL_SERVICE_NAME=express-app
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
@@ -235,6 +246,9 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 | `DB_POOL_MIN` | No | `2` | Minimum pool connections |
 | `DB_POOL_MAX` | No | `10` | Maximum pool connections |
 | `REDIS_URL` | **Yes** | — | Full Redis connection URL, e.g. `redis://host:6379` |
+| `MONGODB_URI` | **Yes** | — | MongoDB connection string, e.g. `mongodb://host:27017/myapp` |
+| `MONGODB_POOL_MIN` | No | `2` | Minimum MongoDB connection pool size |
+| `MONGODB_POOL_MAX` | No | `10` | Maximum MongoDB connection pool size |
 | `OTEL_SERVICE_NAME` | No | `express-app` | Service name tag on all traces and spans |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://localhost:4318` | OTLP HTTP collector endpoint |
 
@@ -315,6 +329,7 @@ docker run --rm \
   -e DB_USER=postgres \
   -e DB_PASS=postgres \
   -e REDIS_URL=redis://host.docker.internal:6379 \
+  -e MONGODB_URI=mongodb://host.docker.internal:27017/myapp \
   express-app:latest
 ```
 
@@ -334,9 +349,10 @@ Services defined in `docker-compose.yml`:
 
 | Service | Image | Port | Notes |
 |---|---|---|---|
-| `app` | Built from `Dockerfile` | `3000` | Depends on postgres and redis health checks |
+| `app` | Built from `Dockerfile` | `3000` | Depends on postgres, redis, and mongodb health checks |
 | `postgres` | `postgres:16-alpine` | `5432` | Data persisted in `pgdata` volume |
 | `redis` | `redis:7-alpine` | `6379` | AOF persistence enabled; data in `redisdata` volume |
+| `mongodb` | `mongo:8` | `27017` | Data persisted in `mongodata` volume |
 
 ---
 
@@ -783,7 +799,7 @@ git clone https://github.com/your-org/express-ts-drizzle-boilerplate.git
 cd express-ts-drizzle-boilerplate
 npm install
 cp .env.example .env
-docker compose up -d postgres redis
+docker compose up -d postgres redis mongodb
 npm run db:push
 npm run dev
 ```

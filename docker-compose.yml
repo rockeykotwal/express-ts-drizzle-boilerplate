@@ -10,10 +10,13 @@ services:
     environment:
       DB_HOST: postgres
       REDIS_URL: redis://redis:6379
+      MONGODB_URI: mongodb://mongodb:27017/${DB_NAME:-myapp}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -55,6 +58,20 @@ services:
       timeout: 5s
       retries: 5
 
+  mongodb:
+    image: mongo:8
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   mailpit:
     image: axllent/mailpit:latest
     ports:
@@ -65,3 +82,4 @@ services:
 volumes:
   pgdata:
   redisdata:
+  mongodata:
