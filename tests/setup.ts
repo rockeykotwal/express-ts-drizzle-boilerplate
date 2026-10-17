@@ -48,6 +48,26 @@ vi.mock('../src/cache/redis', () => ({
   deleteCache: vi.fn().mockResolvedValue(undefined),
 }));
 
+// ── Mock MongoDB client ───────────────────────────────────────────────────────
+// Prevents real MongoDB connections during unit tests
+vi.mock('../src/mongodb/client', () => ({
+  mongoClient: {
+    connect: vi.fn().mockResolvedValue(undefined),
+    close:   vi.fn().mockResolvedValue(undefined),
+    db:      vi.fn().mockReturnValue({}),
+    on:      vi.fn(),
+  },
+  mongoDb: {
+    collection: vi.fn().mockReturnValue({
+      findOne:   vi.fn().mockResolvedValue(null),
+      find:      vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([]) }),
+      insertOne: vi.fn().mockResolvedValue({ insertedId: 'mock-id' }),
+      updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
+      deleteOne: vi.fn().mockResolvedValue({ deletedCount: 1 }),
+    }),
+  },
+}));
+
 // ── Mock observability ────────────────────────────────────────────────────────
 vi.mock('../src/observability/logger', () => ({
   logger: {
