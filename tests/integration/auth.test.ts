@@ -33,10 +33,10 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  // Truncate users table BEFORE each test so every test starts with a clean
-  // slate, regardless of what the previous test (or file) left behind.
+  // Delete only the users created by this test file so parallel file execution
+  // doesn't truncate users that users.test.ts has in flight.
   try {
-    await db.execute(sql`TRUNCATE TABLE users CASCADE`);
+    await db.execute(sql`DELETE FROM users WHERE email = 'jane@example.com'`);
   } catch {
     // If the DB isn't available in this run, skip silently
   }
