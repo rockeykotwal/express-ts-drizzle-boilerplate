@@ -12,6 +12,7 @@ import { TOKENS } from './tokens';
 export { TOKENS } from './tokens';
 
 // ── Infrastructure instances ──────────────────────────────────────────────────
+// MongoDb is registered by mongoLoader() after a verified connection.
 container.registerInstance(TOKENS.DrizzleDb,   db);
 container.registerInstance(TOKENS.RedisClient, redisClient);
 

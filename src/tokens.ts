@@ -2,6 +2,7 @@
 export const TOKENS = {
   DrizzleDb:     'DrizzleDb',
   RedisClient:   'RedisClient',
+  MongoDb:       'MongoDb',
   EmailProvider: 'EmailProvider',
   EmailService:  'EmailService',
 } as const;
